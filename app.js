@@ -29,10 +29,6 @@
         reportElement.classList.add('hidden');
     }
 
-    function formatYen(value) {
-        return `${Math.round(Number(value) / 10000).toLocaleString('ja-JP')}万円`;
-    }
-
     function appendOverview(label, value) {
         const term = document.createElement('dt');
         const description = document.createElement('dd');
@@ -48,7 +44,6 @@
         appendOverview('面積', `${Number(report.propertyArea).toLocaleString('ja-JP')}㎡`);
         appendOverview('築年数', report.propertyType === '土地' ? '対象外' : `${report.buildingAge}年`);
         appendOverview('物件の現況', report.propertyCondition);
-        document.getElementById('price').textContent = `${formatYen(report.samplePriceLow)}〜${formatYen(report.samplePriceHigh)}`;
         document.getElementById('supplemental').textContent = report.supplementalText;
         document.getElementById('consultation').textContent = report.consultationText;
         document.getElementById('expiry').textContent = `閲覧期限：${new Date(report.accessExpiresAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}（日本時間）`;
