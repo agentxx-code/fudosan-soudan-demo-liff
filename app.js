@@ -115,6 +115,18 @@
             }
 
             if (!result.ok || !payload || payload.ok !== true || !payload.report) {
+                if (result.status === 403
+                    && initializedUrl.searchParams.get('authRetry') !== '1'
+                    && window.liff.isLoggedIn()) {
+                    const retryUrl = new URL(window.location.href);
+                    retryUrl.searchParams.set('authRetry', '1');
+                    window.liff.logout();
+                    window.location.replace(retryUrl.toString());
+                    return;
+                }
+
+                initializedUrl.searchParams.delete('authRetry');
+                window.history.replaceState(null, '', initializedUrl.toString());
                 showError(
                     'レポートを表示できません',
                     '本人確認またはレポートの照合に失敗しました。LINEで受け取ったリンクをもう一度ご確認ください。',
@@ -122,6 +134,8 @@
                 return;
             }
 
+            initializedUrl.searchParams.delete('authRetry');
+            window.history.replaceState(null, '', initializedUrl.toString());
             renderReport(payload.report);
         } catch (error) {
             showError(
