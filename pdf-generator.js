@@ -184,12 +184,24 @@
         overviewRow('築年数', report.propertyType === '土地' ? '対象外' : `${report.buildingAge}年`);
         overviewRow('物件の現況', report.propertyCondition);
 
-        heading('価格について');
-        paragraph('今回は価格を算出していません。', {
-            size: 14,
-            lineHeight: 22,
-            after: 10,
-        });
+        const hasReviewedResult = typeof report.priceEstimate === 'string'
+            && report.priceEstimate.length > 0
+            && ['brokerageRecommendation', 'purchaseRecommendation', 'holdUseRecommendation']
+                .every((key) => typeof report[key] === 'string');
+
+        heading(hasReviewedResult ? '査定結果' : '価格について');
+        if (hasReviewedResult) {
+            overviewRow('価格目安', report.priceEstimate);
+            overviewRow('仲介売却', `おすすめ度：${report.brokerageRecommendation}`);
+            overviewRow('買取', `おすすめ度：${report.purchaseRecommendation}`);
+            overviewRow('保有・活用', `おすすめ度：${report.holdUseRecommendation}`);
+        } else {
+            paragraph('今回は価格算出を行っていません。', {
+                size: 14,
+                lineHeight: 22,
+                after: 10,
+            });
+        }
         paragraph(report.supplementalText);
 
         heading('補足説明');

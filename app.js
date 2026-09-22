@@ -51,6 +51,37 @@
         appendOverview('面積', `${Number(report.propertyArea).toLocaleString('ja-JP')}㎡`);
         appendOverview('築年数', report.propertyType === '土地' ? '対象外' : `${report.buildingAge}年`);
         appendOverview('物件の現況', report.propertyCondition);
+        const recommendationsElement = document.getElementById('recommendations');
+        const reviewedResult = document.getElementById('reviewedResult');
+        const legacyResult = document.getElementById('legacyResult');
+        const reviewedItems = [
+            ['仲介売却', report.brokerageRecommendation],
+            ['買取', report.purchaseRecommendation],
+            ['保有・活用', report.holdUseRecommendation],
+        ];
+        const hasReviewedResult = typeof report.priceEstimate === 'string'
+            && report.priceEstimate.length > 0
+            && reviewedItems.every((item) => typeof item[1] === 'string');
+
+        recommendationsElement.replaceChildren();
+        reviewedResult.classList.toggle('hidden', !hasReviewedResult);
+        legacyResult.classList.toggle('hidden', hasReviewedResult);
+
+        if (hasReviewedResult) {
+            document.getElementById('priceEstimate').textContent = `価格目安：${report.priceEstimate}`;
+            reviewedItems.forEach(([label, value]) => {
+                const item = document.createElement('section');
+                const heading = document.createElement('h3');
+                const recommendation = document.createElement('p');
+                item.className = 'recommendation-card';
+                heading.textContent = label;
+                recommendation.textContent = `おすすめ度：${value}`;
+                recommendation.className = 'recommendation-value';
+                item.append(heading, recommendation);
+                recommendationsElement.append(item);
+            });
+        }
+
         document.getElementById('supplemental').textContent = report.supplementalText;
         document.getElementById('consultation').textContent = report.consultationText;
         document.getElementById('disclaimer').textContent = report.disclaimer
