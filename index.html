@@ -5,21 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
     <meta name="robots" content="noindex, nofollow, noarchive">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://static.line-scdn.net; style-src 'self'; connect-src https://sitema0.wixstudio.com https://*.line.me https://*.line-apps.com; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://*.line.me">
-    <title>簡易査定レポート</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://static.line-scdn.net; style-src 'self'; connect-src 'self' https://sitema0.wixstudio.com https://*.line.me https://*.line-apps.com; img-src 'self' data:; font-src 'self'; frame-src blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://*.line.me">
+    <title>簡易査定参考レポート</title>
     <link rel="stylesheet" href="./styles.css">
     <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script defer src="./vendor/jspdf-4.2.1.umd.min.js"></script>
+    <script defer src="./pdf-generator.js"></script>
     <script defer src="./app.js"></script>
 </head>
 <body>
     <main class="card">
         <section id="status" aria-live="polite">
-            <h1>簡易査定レポート</h1>
+            <h1>簡易査定参考レポート</h1>
             <p>レポートを確認しています…</p>
         </section>
         <article id="report" class="hidden">
-            <h1>簡易査定レポート</h1>
-            <p class="notice">動作確認用サンプル／実際の査定結果ではありません</p>
+            <h1>簡易査定参考レポート</h1>
+            <p class="notice" id="disclaimer">参考情報であり、正式な査定結果ではありません</p>
             <h2>物件概要</h2>
             <dl class="grid" id="overview"></dl>
             <h2>価格について</h2>
@@ -29,6 +31,13 @@
             <p>物件の個別条件、周辺環境、権利関係、建物状態などは反映していません。このページはレポート表示とLINE配信の動作確認だけを目的としています。</p>
             <h2>今後の相談案内</h2>
             <p id="consultation"></p>
+            <section class="pdf-section" aria-labelledby="pdf-heading">
+                <h2 id="pdf-heading">PDF版</h2>
+                <p id="pdfStatus" role="status">PDFを作成しています…</p>
+                <iframe id="pdfPreview" class="pdf-preview hidden" title="簡易査定参考レポート PDFプレビュー"></iframe>
+                <button id="savePdfButton" class="pdf-button hidden" type="button">PDFを保存</button>
+                <button id="retryPdfButton" class="pdf-retry hidden" type="button">PDF作成を再試行</button>
+            </section>
             <p class="muted" id="expiry"></p>
         </article>
     </main>

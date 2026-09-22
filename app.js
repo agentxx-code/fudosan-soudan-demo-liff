@@ -6,12 +6,19 @@
     const REPORT_REF_PATTERN = /^[a-f0-9]{32}$/;
     const statusElement = document.getElementById('status');
     const reportElement = document.getElementById('report');
+    const pdfStatusElement = document.getElementById('pdfStatus');
+    const pdfPreviewElement = document.getElementById('pdfPreview');
+    const savePdfButton = document.getElementById('savePdfButton');
+    const retryPdfButton = document.getElementById('retryPdfButton');
+    let activePdfUrl = null;
+    let activePdfFileName = null;
+    let authenticatedReport = null;
 
     function showStatus(message) {
         statusElement.replaceChildren();
         const heading = document.createElement('h1');
         const paragraph = document.createElement('p');
-        heading.textContent = '簡易査定レポート';
+        heading.textContent = '簡易査定参考レポート';
         paragraph.textContent = message;
         statusElement.append(heading, paragraph);
         statusElement.classList.remove('hidden');
@@ -46,9 +53,72 @@
         appendOverview('物件の現況', report.propertyCondition);
         document.getElementById('supplemental').textContent = report.supplementalText;
         document.getElementById('consultation').textContent = report.consultationText;
+        document.getElementById('disclaimer').textContent = report.disclaimer
+            || '参考情報であり、正式な査定結果ではありません';
         document.getElementById('expiry').textContent = `閲覧期限：${new Date(report.accessExpiresAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}（日本時間）`;
         statusElement.classList.add('hidden');
         reportElement.classList.remove('hidden');
+    }
+
+    function releasePdfUrl() {
+        if (activePdfUrl) {
+            URL.revokeObjectURL(activePdfUrl);
+            activePdfUrl = null;
+        }
+    }
+
+    async function createPdf(report) {
+        retryPdfButton.classList.add('hidden');
+        savePdfButton.classList.add('hidden');
+        pdfPreviewElement.classList.add('hidden');
+        pdfStatusElement.textContent = 'PDFを作成しています…';
+        releasePdfUrl();
+
+        try {
+            const fontResponse = await fetch('./fonts/NotoSansJP-Regular.ttf', {
+                cache: 'force-cache',
+                credentials: 'omit',
+            });
+
+            if (!fontResponse.ok) {
+                throw new Error('PDF_FONT_FETCH_FAILED');
+            }
+
+            const fontBytes = new Uint8Array(await fontResponse.arrayBuffer());
+            const generated = await window.ValuationPdf.generate(
+                report,
+                fontBytes,
+            );
+            fontBytes.fill(0);
+            const blob = new Blob([generated.bytes], {
+                type: 'application/pdf',
+            });
+            activePdfUrl = URL.createObjectURL(blob);
+            activePdfFileName = generated.fileName;
+            pdfPreviewElement.src = activePdfUrl;
+            pdfPreviewElement.classList.remove('hidden');
+            savePdfButton.classList.remove('hidden');
+            pdfStatusElement.textContent = `PDFを作成しました（${generated.pageCount}ページ）。内容を確認して保存できます。`;
+        } catch (error) {
+            releasePdfUrl();
+            activePdfFileName = null;
+            pdfStatusElement.textContent = 'PDFを作成できませんでした。Web版のレポートは引き続き確認できます。';
+            retryPdfButton.classList.remove('hidden');
+        }
+    }
+
+    function savePdf() {
+        if (!activePdfUrl || !activePdfFileName) {
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.href = activePdfUrl;
+        link.download = activePdfFileName;
+        link.rel = 'noopener';
+        document.body.append(link);
+        link.click();
+        link.remove();
     }
 
     async function start() {
@@ -137,6 +207,8 @@
             initializedUrl.searchParams.delete('authRetry');
             window.history.replaceState(null, '', initializedUrl.toString());
             renderReport(payload.report);
+            authenticatedReport = payload.report;
+            await createPdf(authenticatedReport);
         } catch (error) {
             showError(
                 'レポートを表示できません',
@@ -147,5 +219,12 @@
         }
     }
 
+    savePdfButton.addEventListener('click', savePdf);
+    retryPdfButton.addEventListener('click', () => {
+        if (authenticatedReport) {
+            createPdf(authenticatedReport);
+        }
+    });
+    window.addEventListener('beforeunload', releasePdfUrl);
     start();
 })();
