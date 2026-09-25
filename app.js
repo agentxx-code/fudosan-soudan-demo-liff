@@ -2,7 +2,7 @@
     'use strict';
 
     const LIFF_ID = '2011674482-yvZEalkR';
-    const REPORT_API_URL = 'https://sitema0.wixstudio.com/my-site-1/_functions/liffValuationReportData?rc=test-site';
+    const REPORT_API_URL = 'https://sitema0.wixstudio.com/my-site-1/_functions/liffValuationReportData';
     const REPORT_REF_PATTERN = /^[a-f0-9]{32}$/;
     const statusElement = document.getElementById('status');
     const reportElement = document.getElementById('report');
